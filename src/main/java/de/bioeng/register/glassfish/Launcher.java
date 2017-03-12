@@ -4,6 +4,7 @@ import org.glassfish.embeddable.*;
 
 import java.io.File;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,6 +21,8 @@ import java.util.logging.Logger;
  * @author Luis-Manuel Wolff Heredia <a href='mailto:l.wolff@bioeng.de'>mailto:l.wolff@bioeng.de</a>
  */
 public class Launcher {
+
+    private static GlassFishFacade facade;
 
     /**
      * <p>This method will try to start an instance of an GlassFish-Server. It will first check, weather the caller
@@ -51,46 +54,40 @@ public class Launcher {
         String[] deploymentArgs = new String[args.length - 1];
         System.arraycopy(args, 1, deploymentArgs, 0, args.length - 1);
 
+        readEnv("WEB_LISTENER"  , Const.WEB_LISTENER, (value) ->
+                value.equalsIgnoreCase("https") ? "https-listener" : "http-listener");
+        readEnv("WEB_PORT"      , Const.WEB_PORT);
+        readEnv("DB_CLASSNAME"  , Const.DB_CLASSNAME);
+        readEnv("DB_TYPE"       , Const.DB_TYPE);
+        readEnv("DB_USER"       , Const.DB_USER);
+        readEnv("DB_PASSWD"     , Const.DB_PASSWD);
+        readEnv("DB_NAME"       , Const.DB_NAME);
+        readEnv("DB_HOST"       , Const.DB_HOST);
+        readEnv("DB_PORT"       , Const.DB_PORT);
+        readEnv("DB_POOL"       , Const.DB_POOL);
+        readEnv("DB_JNDI"       , Const.DB_JNDI);
+
         logger.info("Starting GlassFish-Server");
 
-        GlassFishProperties glassFishProperties = new GlassFishProperties();
-
-        String protocol = env.getOrDefault("LISTENER", "http");
-        String listener = protocol.equalsIgnoreCase("https") ? "https-listener" : "http-listener";
-        String port = env.getOrDefault("LISTENER_PORT", "8080");
-        glassFishProperties.setPort(listener, Integer.parseInt(port));
-
-        final GlassFish glassFish;
         try {
-            glassFish = GlassFishRuntime.bootstrap().newGlassFish(glassFishProperties);
-            glassFish.start();
-
-            CommandRunner commandRunner = glassFish.getCommandRunner();
-            CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool",
-                    "--datasourceclassname", "com.mysql.jdbc.jdbc2.optional.MysqlDataSource",
-                    "--restype", "javax.sql.DataSource",
-                    "--property", "DatabaseName=auth:Password=s3cret:User=registerAuth:ServerName=localhost:Port=3306",
-                    "AuthDBConnectionPool");
-            if (commandResult.getExitStatus().equals(CommandResult.ExitStatus.FAILURE)){
-                throw commandResult.getFailureCause();
-            }
-
-            commandResult = commandRunner.run("create-jdbc-resource",
-                    "--connectionpoolid", "AuthDBConnectionPool",
-                    "jdbc/register/auth");
-            if (commandResult.getExitStatus().equals(CommandResult.ExitStatus.FAILURE)){
-                throw commandResult.getFailureCause();
-            }
-
-            logger.info("Deploy web app " + war.getAbsolutePath());
-            Deployer deployer = glassFish.getDeployer();
-            deployer.deploy(war, deploymentArgs);
-            if (deployer.getDeployedApplications().size() == 0) {
-                throw new GlassFishException("Deploying of application failed");
-            }
-        } catch (Throwable e) {
-            logger.log(Level.SEVERE, "Error on starting glassfish server", e);
+            facade = new GlassFishFacade();
+            facade.start();
+            facade.configureJDBCResource();
+            facade.deployApplication(war, deploymentArgs);
+        } catch (StartUpException e) {
+            logger.log(Level.SEVERE, "Error on start up of application server", e);
             System.exit(1);
+        }
+    }
+
+    private static void readEnv(String env, String key){
+        readEnv(env, key, (value) -> value);
+    }
+
+    private static void readEnv(String env, String key, Function<String, String> mapper){
+        String value = System.getenv(env);
+        if (value != null){
+            System.setProperty(key, mapper.apply(value));
         }
     }
 }
