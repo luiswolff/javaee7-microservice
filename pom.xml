@@ -5,8 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.bioeng.register</groupId>
-    <artifactId>glassfish-embedded</artifactId>
+    <artifactId>glassfish-microservice</artifactId>
     <version>1.0.0.Final</version>
+
+    <packaging>jar</packaging>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -19,15 +21,25 @@
             <artifactId>glassfish-embedded-web</artifactId>
             <version>4.1.1</version>
         </dependency>
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.38</version>
-        </dependency>
     </dependencies>
 
     <build>
         <finalName>${artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>de.bioeng.register.glassfish.Launcher</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>lib/glassfish-embedded.jar lib/mysql-connector-java.jar</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

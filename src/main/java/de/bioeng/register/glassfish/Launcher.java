@@ -1,9 +1,8 @@
 package de.bioeng.register.glassfish;
 
-import org.glassfish.embeddable.*;
-
 import java.io.File;
-import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,6 +21,8 @@ import java.util.logging.Logger;
  */
 public class Launcher {
 
+    private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
+
     private static GlassFishFacade facade;
 
     /**
@@ -37,18 +38,16 @@ public class Launcher {
      */
     public static void main(String[] args) {
 
-        final Logger logger = Logger.getLogger(Launcher.class.getName());
-        final Map<String, String> env = System.getenv();
-        logger.info("Prepare starting of GlassFish-Server");
+        LOGGER.info("Prepare starting of GlassFish-Server");
 
         if (args.length == 0) {
-            logger.warning("There was no WAR-File to deploy submitted. EXITING!");
+            LOGGER.warning("There was no WAR-File to deploy submitted. EXITING!");
             System.exit(1);
         }
 
         File war = new File(args[0]);
         if (!war.exists()) {
-            logger.warning("The file submitted dose not exists. EXITING!");
+            LOGGER.warning("The file submitted dose not exists. EXITING!");
             System.exit(1);
         }
         String[] deploymentArgs = new String[args.length - 1];
@@ -67,16 +66,56 @@ public class Launcher {
         readEnv("DB_POOL"       , Const.DB_POOL);
         readEnv("DB_JNDI"       , Const.DB_JNDI);
 
-        logger.info("Starting GlassFish-Server");
+        LOGGER.info("Starting GlassFish-Server");
 
         try {
             facade = new GlassFishFacade();
             facade.start();
             facade.configureJDBCResource();
             facade.deployApplication(war, deploymentArgs);
-        } catch (StartUpException e) {
-            logger.log(Level.SEVERE, "Error on start up of application server", e);
-            System.exit(1);
+        } catch (ASException e) {
+            LOGGER.log(Level.SEVERE, "Error on start up of application server", e);
+            System.exit(e.exit);
+        }
+
+        LOGGER.info("GlassFish-Server and deployment artifact started successfully. Type \"exit\" or \"^C\" to halt this process");
+        final Thread shutdownHook = new Thread(Launcher::shutdown);
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+        final Thread inputListener = new Thread(() -> {
+            Scanner scanner = new Scanner(System.in);
+            String input;
+            do {
+                try {
+                    input = scanner.next(".*");
+                } catch (NoSuchElementException e){
+                    //Input stream was closed maybe by shutdown hook.
+                    return;
+                }
+            } while (!input.equalsIgnoreCase("exit"));
+
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            shutdown(false);
+        });
+        inputListener.setName("AS-Console-Listener");
+        inputListener.setDaemon(true);
+        inputListener.start();
+    }
+
+    private static void shutdown(){
+        shutdown(true);
+    }
+
+    private static void shutdown(boolean shutdownInProgress){
+        LOGGER.info("Received stop command");
+        try {
+            facade.stop(true);
+            if (!shutdownInProgress){
+                System.exit(0);
+            }
+        } catch (ASException e) {
+            LOGGER.log(Level.SEVERE, "Could not stop application server correctly", e);
+            Runtime.getRuntime().halt(e.exit);
         }
     }
 
