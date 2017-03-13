@@ -56,7 +56,7 @@ public class Launcher {
         readEnv("WEB_LISTENER"  , Const.WEB_LISTENER, (value) ->
                 value.equalsIgnoreCase("https") ? "https-listener" : "http-listener");
         readEnv("WEB_PORT"      , Const.WEB_PORT);
-        readEnv("DB_CLASSNAME"  , Const.DB_CLASSNAME);
+        readEnv("DB_CLASS"      , Const.DB_CLASS);
         readEnv("DB_TYPE"       , Const.DB_TYPE);
         readEnv("DB_USER"       , Const.DB_USER);
         readEnv("DB_PASSWD"     , Const.DB_PASSWD);

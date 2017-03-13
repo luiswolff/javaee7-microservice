@@ -64,7 +64,7 @@ class GlassFishFacade {
     }
 
     void configureJDBCResource() throws ASException {
-        final String className  = System.getProperty(Const.DB_CLASSNAME , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+        final String className  = System.getProperty(Const.DB_CLASS     , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
         final String type       = System.getProperty(Const.DB_TYPE      , "javax.sql.DataSource");
         final String user       = System.getProperty(Const.DB_USER      , "sa");
         final String password   = System.getProperty(Const.DB_PASSWD    , "sa");

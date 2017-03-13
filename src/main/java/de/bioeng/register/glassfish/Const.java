@@ -10,7 +10,7 @@ class Const {
     static final String WEB_LISTENER    = PACKAGE + ".WEB_LISTENER";
     static final String WEB_PORT        = PACKAGE + ".WEB_PORT";
     static final String DB_TYPE         = PACKAGE + ".DB_TYPE";
-    static final String DB_CLASSNAME    = PACKAGE + ".DB_CLASSNAME";
+    static final String DB_CLASS        = PACKAGE + ".DB_CLASS";
     static final String DB_USER         = PACKAGE + ".DB_USER";
     static final String DB_PASSWD       = PACKAGE + ".DB_PASSWD";
     static final String DB_NAME         = PACKAGE + ".DB_NAME";

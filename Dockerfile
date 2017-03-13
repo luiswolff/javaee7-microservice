@@ -14,18 +14,20 @@ RUN wget -O lib/glassfish-embedded.jar http://central.maven.org/maven2/org/glass
 # Download the jdbc driver of MySQL database
 RUN wget -O lib/mysql-connector-java.jar http://central.maven.org/maven2/mysql/mysql-connector-java/${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}.jar
 
-# Add the executable JAR-File that runs the mircoservice
+# Add the executable JAR-File that runs the microservice
 ADD target/glassfish-microservice.jar .
 
 # Add an example, which is by default shown on start up
 ADD deployment/ROOT.war .
 
 # Define environment variables
-ENV JAVA_ARGS="ROOT.war --contextroot=/" \
-    WEB_PORT=8080
+ENV JAVA_OPS="-Xmx400m -Xms400m" \
+    JAVA_ARGS="ROOT.war --contextroot=/" \
+    WEB_PORT=8080 \
+    DB_HOST=172.17.0.1
 
 # Define the command for start up
-CMD java -Xmx400m -Xms400m -jar glassfish-microservice.jar ${JAVA_ARGS}
+CMD java ${JAVA_OPS} -jar glassfish-microservice.jar ${JAVA_ARGS}
 
 # The external port
 EXPOSE ${WEB_PORT}
