@@ -186,7 +186,7 @@ Autor und Datum
 ----------------
 
 Luis-Manuel Wolff Heredia  
-Email: [l.wolff@bioeng.de](mailto:l.wolff@bioeng.de])  
+Email: [luis-manuel.wolff@outlook.com](mailto:luis-manuel.wolff@outlook.com])  
 Datum: 13.03.2017
 
 [1]: https://glassfish.java.net
