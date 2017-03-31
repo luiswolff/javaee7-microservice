@@ -1,9 +1,8 @@
-package de.bioeng.register.glassfish;
+package com.luiswolff.microservices;
 
 import java.io.File;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +22,7 @@ public class Launcher {
 
     private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
 
-    private static GlassFishFacade facade;
+    private static ASFacade facade;
 
     /**
      * <p>This method will try to start an instance of an GlassFish-Server. It will first check, weather the caller
@@ -53,23 +52,22 @@ public class Launcher {
         String[] deploymentArgs = new String[args.length - 1];
         System.arraycopy(args, 1, deploymentArgs, 0, args.length - 1);
 
-        readEnv("WEB_LISTENER"  , Const.WEB_LISTENER, (value) ->
-                value.equalsIgnoreCase("https") ? "https-listener" : "http-listener");
-        readEnv("WEB_PORT"      , Const.WEB_PORT);
-        readEnv("DB_CLASS"      , Const.DB_CLASS);
-        readEnv("DB_TYPE"       , Const.DB_TYPE);
-        readEnv("DB_USER"       , Const.DB_USER);
-        readEnv("DB_PASSWD"     , Const.DB_PASSWD);
-        readEnv("DB_NAME"       , Const.DB_NAME);
-        readEnv("DB_HOST"       , Const.DB_HOST);
-        readEnv("DB_PORT"       , Const.DB_PORT);
-        readEnv("DB_POOL"       , Const.DB_POOL);
-        readEnv("DB_JNDI"       , Const.DB_JNDI);
+        readEnv("WEB_LISTENER"  , "javaee7.ms.WEB_LISTENER");
+        readEnv("WEB_PORT"      , "javaee7.ms.WEB_PORT");
+        readEnv("DB_CLASS"      , "javaee7.ms.DB_CLASS");
+        readEnv("DB_TYPE"       , "javaee7.ms.DB_TYPE");
+        readEnv("DB_USER"       , "javaee7.ms.DB_USER");
+        readEnv("DB_PASSWD"     , "javaee7.ms.DB_PASSWD");
+        readEnv("DB_NAME"       , "javaee7.ms.DB_NAME");
+        readEnv("DB_HOST"       , "javaee7.ms.DB_HOST");
+        readEnv("DB_PORT"       , "javaee7.ms.DB_PORT");
+        readEnv("DB_POOL"       , "javaee7.ms.DB_POOL");
+        readEnv("DB_JNDI"       , "javaee7.ms.DB_JNDI");
 
         LOGGER.info("Starting GlassFish-Server");
 
         try {
-            facade = new GlassFishFacade();
+            facade = ASFacade.getInstance();
             facade.start();
             facade.configureJDBCResource();
             facade.deployApplication(war, deploymentArgs);
@@ -91,6 +89,9 @@ public class Launcher {
                 } catch (NoSuchElementException e){
                     //Input stream was closed maybe by shutdown hook.
                     return;
+                }
+                if (input.equalsIgnoreCase("restart")){
+                    restart();
                 }
             } while (!input.equalsIgnoreCase("exit"));
 
@@ -119,14 +120,22 @@ public class Launcher {
         }
     }
 
-    private static void readEnv(String env, String key){
-        readEnv(env, key, (value) -> value);
+    private static void restart(){
+        //TODO: This method dose not restart the server. Why?
+        LOGGER.info("Restart application server");
+        try {
+            facade.stop(false);
+            facade.start();
+        } catch (ASException e){
+            LOGGER.log(Level.SEVERE, "Exception on restarting server", e);
+            Runtime.getRuntime().halt(1);
+        }
     }
 
-    private static void readEnv(String env, String key, Function<String, String> mapper){
+    private static void readEnv(String env, String key){
         String value = System.getenv(env);
         if (value != null){
-            System.setProperty(key, mapper.apply(value));
+            System.setProperty(key, value);
         }
     }
 }

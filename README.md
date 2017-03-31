@@ -54,7 +54,7 @@ $ mvn clean package
 
 Das Resultat ist die Datei `target/glasfish-microservice.jar`, welche unter Hinzugabe der Abhängigkeiten ausführbar ist.
 Das [Maven-JAR-Plugin][4] der `pom.xml` ist so konfiguriet, dass der JAR ein [Manifest][5] hinzugefügt wird.
-Dieses definiert die Klasse `de.bioeng.register.glassfish.Launcher` als Hauptklasse.
+Dieses definiert die Klasse `com.luiswolff.microservices.Launcher` als Hauptklasse.
 Des weiteren soll die VM die Archive `lib/glassfish-embedded.jar` und `lib/mysql-connector-java.jar` im Klassenpfad mit aufnehmen.
 Diese Definition von Abhängigkeiten wird für das Deployment im Docker-Container ausgenutzt.
 
@@ -97,7 +97,7 @@ Hierfür sind prinzipell zwei Ansätze außerhalb einer IDE denkbar:
   GlassFish-Mircroservices kann somit über folgenden Commandozeilen-Befehl ausgeführt werden:
   
       ````
-       $ mvn clean compile exec:java -Dexec.mainClass="de.bioeng.register.glassfish.Launcher" -Dexec.args="deployment/ROOT.war --contextroot=/"
+       $ mvn clean compile exec:java -Dexec.mainClass="Launcher" -Dexec.args="deployment/ROOT.war --contextroot=/"
       ````
  - **Java Programm:** Zusätzlich ist auch die direkte verwendung des Java Programms mit `-jar` möglich. 
    Hierbei muss aber beachtet werden, dass sich die Dependencies in dem von Manifest definierten Positionen relativ zum aktuellen Courser befinden.

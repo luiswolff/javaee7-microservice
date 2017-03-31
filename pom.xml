@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.bioeng.register</groupId>
-    <artifactId>glassfish-microservice</artifactId>
-    <version>1.0.0.Final</version>
+    <groupId>com.luiswolff.microservices</groupId>
+    <artifactId>javaee7-microservice</artifactId>
+    <version>1.0.0.Alpha</version>
 
     <packaging>jar</packaging>
 
@@ -31,7 +31,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>de.bioeng.register.glassfish.Launcher</mainClass>
+                            <mainClass>com.luiswolff.microservices.Launcher</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Class-Path>lib/glassfish-embedded.jar lib/mysql-connector-java.jar</Class-Path>

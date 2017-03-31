@@ -1,5 +1,7 @@
-package de.bioeng.register.glassfish;
+package com.luiswolff.microservices.glassfish;
 
+import com.luiswolff.microservices.ASException;
+import com.luiswolff.microservices.ASFacade;
 import org.glassfish.embeddable.*;
 
 import java.io.File;
@@ -9,13 +11,14 @@ import java.io.File;
  *
  * Created by luis- on 11.03.2017.
  */
-class GlassFishFacade {
+public class GlassFishFacade implements ASFacade{
 
     private final GlassFish glassFish;
 
-    GlassFishFacade() throws ASException {
-        String listener         = System.getProperty(Const.WEB_LISTENER , "http-listener");
-        String port             = System.getProperty(Const.WEB_PORT     , "8080");
+    public GlassFishFacade() throws ASException {
+        String listener = System.getProperty("javaee7.ms.WEB_LISTENER", "http")
+                .equalsIgnoreCase("https") ? "https-listener" : "http-listener";
+        String port     = System.getProperty("javaee7.ms.WEB_PORT"    , "8080");
 
         GlassFishProperties glassFishProperties = new GlassFishProperties();
         glassFishProperties.setPort(listener, Integer.parseInt(port));
@@ -27,7 +30,7 @@ class GlassFishFacade {
         }
     }
 
-    void start() throws ASException {
+    public void start() throws ASException {
         try {
             GlassFish.Status status = glassFish.getStatus();
             switch (status){
@@ -45,7 +48,7 @@ class GlassFishFacade {
         }
     }
 
-    void stop(boolean dispose) throws ASException {
+    public void stop(boolean dispose) throws ASException {
         try {
             GlassFish.Status status = glassFish.getStatus();
             switch (status){
@@ -63,16 +66,16 @@ class GlassFishFacade {
         }
     }
 
-    void configureJDBCResource() throws ASException {
-        final String className  = System.getProperty(Const.DB_CLASS     , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
-        final String type       = System.getProperty(Const.DB_TYPE      , "javax.sql.DataSource");
-        final String user       = System.getProperty(Const.DB_USER      , "sa");
-        final String password   = System.getProperty(Const.DB_PASSWD    , "sa");
-        final String database   = System.getProperty(Const.DB_NAME      , "test");
-        final String host       = System.getProperty(Const.DB_HOST      , "localhost");
-        final String port       = System.getProperty(Const.DB_PORT      , "3306");
-        final String poolName   = System.getProperty(Const.DB_POOL      , "RegisterConnectionPool");
-        final String jndi       = System.getProperty(Const.DB_JNDI      , "jdbc/__register");
+    public void configureJDBCResource() throws ASException {
+        final String className  = System.getProperty("javaee7.ms.DB_CLASS"     , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
+        final String type       = System.getProperty("javaee7.ms.DB_TYPE"      , "javax.sql.DataSource");
+        final String user       = System.getProperty("javaee7.ms.DB_USER"      , "sa");
+        final String password   = System.getProperty("javaee7.ms.DB_PASSWD"    , "sa");
+        final String database   = System.getProperty("javaee7.ms.DB_NAME"      , "test");
+        final String host       = System.getProperty("javaee7.ms.DB_HOST"      , "localhost");
+        final String port       = System.getProperty("javaee7.ms.DB_PORT"      , "3306");
+        final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "RegisterConnectionPool");
+        final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__register");
 
         final String properties
                 = "DatabaseName="   + database  + ":"
@@ -105,7 +108,7 @@ class GlassFishFacade {
         }
     }
 
-    void deployApplication(File war, String[] args) throws ASException {
+    public void deployApplication(File war, String[] args) throws ASException {
         try {
             Deployer deployer = glassFish.getDeployer();
             deployer.deploy(war, args);
