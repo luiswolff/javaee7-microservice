@@ -75,7 +75,7 @@ public class GlassFishFacade implements ASFacade{
         final String host       = System.getProperty("javaee7.ms.DB_HOST"      , "localhost");
         final String port       = System.getProperty("javaee7.ms.DB_PORT"      , "3306");
         final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "RegisterConnectionPool");
-        final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__register");
+        final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__default");
 
         final String properties
                 = "DatabaseName="   + database  + ":"

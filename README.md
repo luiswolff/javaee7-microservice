@@ -1,5 +1,5 @@
 
-GlassFish-Microservice für das Apherese Register
+Java-EE-7-Microservice
 ================================================
 
 Bei diesem Projekt handelt es sich um eine Vorlage für Microservices, welche auf Java EE 7 aufbauen sollen.
@@ -12,7 +12,7 @@ Dies ist eine Vorraussetzung für den erfolgreichen Betrieb von Microservices mi
 Umsetzung
 ---------
 
-Da der Build und Start von Docker-Container sehr stark von System-Variablen beeinflusst werden kann muss auch der Startvorgang des GlassFish auf diese Mechanismen reagieren können.
+Da der Build und Start von Docker-Container sehr stark von System-Variablen beeinflusst werden kann muss auch der Startvorgang des Java-EE-Containers auf diese Mechanismen reagieren können.
 Zu diesem Zweck wurde dieses Programm so geschrieben, dass es den Embedded GlassFish über folgende System-Varaiablen konfigurieren kann:
 
 **Netzwerk-Dienst**
@@ -29,7 +29,7 @@ Ist dies eine Anforderung, müsste zusätzlich geprüft werden, wie GlassFish ei
 
 | Variable     | Standard               | Beschreibung |
 | :-------     | :------:               | :----------- |
-| DB_CLASS     | MysqlDataSource        | Java-Class, welche eine Verbindung zu einer Datenbank herstellen kann |
+| DB_CLASS     | (...).MysqlDataSource  | Java-Class, welche eine Verbindung zu einer Datenbank herstellen kann |
 | DB_TYPE      | javax.sql.DataSource   | Interface, welches von der Datenbank-Klasse bereit gestellt wird |
 | DB_USER      | sa                     | Benutzer, mit dem die Anwendung sich auf der Datenbank einloggen soll |
 | DB_PASSWD    | sa                     | Password, mit dem sich die Anwendung gegenüber der Datenbank authentifizieren soll |
@@ -37,7 +37,7 @@ Ist dies eine Anforderung, müsste zusätzlich geprüft werden, wie GlassFish ei
 | DB_HOST      | localhost              | Host-Name des Datenbank-Servers |
 | DB_PORT      | 3306                   | Port auf dem der Datenbank-Dienst angeboten wird. Standard ist der MySQL-Port |
 | DB_POOL      | RegisterConnectionPool | Name des Pools, welcher für die Verwaltung der Verbindungen zu Datenbank verantwortlich ist |
-| DB_JNDI      | jdbc/__register        | Name über den die zu deployende Anwendung die Datenbank-Verbindung aufrufen soll | 
+| DB_JNDI      | jdbc/__default         | Name über den die zu deployende Anwendung die Datenbank-Verbindung aufrufen soll | 
 
 *Anmerkung:* Je nach Bedarf können noch weitere Konfigurationen für Mail und JMS folgen.
 
@@ -90,7 +90,7 @@ Damit könnte die Dependencies für ein bestimmtes GlassFish-Profile für unters
 Starten
 -------
 
-Da es sich bei GlassFish-Microservices um ein Java-Projekt handelt, muss es auch mit dem Programm `java` (Achtung: JDK benutzen!) gestartet werden.
+Da es sich bei Java-EE-7-Microservices um ein Java-Projekt handelt, muss es auch mit dem Programm `java` bzw. `javaw` (Achtung: JDK benutzen!) gestartet werden.
 Hierfür sind prinzipell zwei Ansätze außerhalb einer IDE denkbar:
 
  - **Maven verwenden:** Maven kann standardmäßig auf ein Plug-In zugreifen, was es dem Programm erlaubt Java-Anwendungen auszuführen. 
@@ -120,7 +120,7 @@ Um ein Deployment auf einer Docker-Engine zu vereinfachen, wurde diesem Projekt 
 Ein Image kann mit folgenden Befehlen gebaut werden:
 
 ````
-$ mvn clean package && docker build -t bioeng/template/glassfish:1.0.0.FINAL
+$ mvn clean package && docker build -t luiswolff/glassfish-ms:1.0.0.ALPHA
 ````
 
 Das Dockerfile baut ein Docker-Image indem es zunächst die vom Manifest geforderte Datei-Struktur herstellt. 
@@ -137,7 +137,7 @@ Wenn der Container gestartet wird, führt er den folgenden Befehl aus:
 $ java ${JAVA_OPS} -jar glassfish-microservice.jar ${JAVA_ARGS}
 ````
    
-Die Anwendung Java ist verfügbar, weil als das hier erstellte Image von Image `glassfish/openjdk` ([Siehe Docker-Hub][19]) abgeleitet wird.
+Die Anwendung Java ist verfügbar, weil das hier erstellte Image von Image `glassfish/openjdk` ([Siehe Docker-Hub][19]) abgeleitet wird.
 Dies ist auch der Container von dem auch das offizelle [GlassFish-Server-Image][20] (Verwendet die Standalone variante des Server) abgeleitet wird.
 
 Wichtiger ist allerdings die Tatsache, dass das Docker-Image zwei neue Umgebungsvariablen definiert.
@@ -153,29 +153,28 @@ Ferner wird er versuchen die Beispielanwendung, welche im Dateisystem des Image 
 Diese wird unter dem Root-Context bereit gestellt.
 Hieraus ergibt sich, dass Anwendungsentwickler prinzipell zwei Möglichkeiten haben, mit denen sie das Image erweitern können, um eigene Anwendungen bereitzustellen:
 
-1. Sie legen ihre mit den `ROOT.war` im Dateisystem des Containers ab und überschreiben somit die Beispielanwendung.
+1. Sie legen ihre mit den Namen `ROOT.war` im Dateisystem des Containers ab und überschreiben somit die Beispielanwendung.
 Damit wird die Anwendung unter dem Root-Context `http[s]://<host>:<port>/` bereitgestellt. 
 Dies könnte allerdings im Microservice-Umfeld zu Problemen führen.
-Der hier häufig eingesetzte Frontendserver müsste so konfiguriert werden, dass er die intern von Service verwendeten URL in externe umwandelt.
-Verschiedene Services sollten eigentlich auch unter unterschiedlichen URL-Pfaden erreichbar sein.
+Ein Frontendserver müsste so konfiguriert werden, dass er die intern von Service verwendeten URL in externe umwandelt, da verschiedene Services auch unter unterschiedlichen URL-Pfaden erreichbar sein sollten.
 Ein Dockerfile könnte nun wie folgt aussehen:
 
    **Dockerfile für Apps, die unter dem Root-Context erreichbar sein sollen: `http[s]://<host>:<port>/`**
    ````
-   FROM bioeng/template/glassfish:1.0.0.FINAL
+   FROM luiswolff/glassfish-ms:1.0.0.ALPHA
    
    ADD target/myapp.war ROOT.war
    ````
 
 2. Die einfachere Variante ist wohl die zu deployende Anwendung mit dem Namen abzulegen unter dem sie auch erreichbar sein soll und entsprechend die Umgebungsvariable `${JAVA_ARGS}` anzupassen.
-Beispielsweise, soll eine Anwendung unter dem Context `http[s]://<host>:<port>/register` erreichbar sein, sollte das Artifakt dem Image mit `ADD target/<myapp>.war register.war` hinzugefügt werden.
-Die Umgebung sollte ebenfalls mit `ENV JAVA_ARGS="register.war"` angepasst werden.
+Soll beispielsweise eine Anwendung unter dem Context `http[s]://<host>:<port>/myapp` erreichbar sein, sollte das Artifakt dem Image mit `ADD target/<myapp>.war myapp.war` hinzugefügt werden.
+Die Umgebung sollte ebenfalls mit `ENV JAVA_ARGS="myapp.war"` angepasst werden.
 Da GlassFish Java Web Archive standardmäßig unter den Dateinamen bereit stellt, ist keine weitere Konfiguration nötig.
 Ein Dockerfile könnte hier wie folgt aussehen:
 
     **Dockerfile für Apps, die unter einen bestimmten Pfad erreichbar sein sollen: `http[s]://<host>:<port>/myapp`**
     ````
-    FROM bioeng/template/glassfish:1.0.0.FINAL
+    FROM luiswolff/glassfish-ms:1.0.0.ALPHA
     
     ENV JAVA_ARGS="myapp.war"
     
