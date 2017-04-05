@@ -26,7 +26,7 @@
 
     <groupId>com.luiswolff.microservices</groupId>
     <artifactId>Java-EE7-Microservice</artifactId>
-    <version>1.0.0.Alpha</version>
+    <version>1.0.0.BETA</version>
 
     <packaging>jar</packaging>
 
