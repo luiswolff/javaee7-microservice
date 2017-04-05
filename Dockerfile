@@ -1,7 +1,7 @@
 # Use the glassfish openjdk from docker hub for testing purpose
 FROM glassfish/openjdk
 
-MAINTAINER Luis-Manuel Wolff Heredia <l.wolff@bioeng.de>
+MAINTAINER Luis-Manuel Wolff Heredia <luis-manuel.wolff@outlook.com>
 
 # Define build arguments
 ARG GLASSFISH_VERSION=4.1.1 
@@ -14,8 +14,8 @@ RUN wget -O lib/glassfish-embedded.jar http://central.maven.org/maven2/org/glass
 # Download the jdbc driver of MySQL database
 RUN wget -O lib/mysql-connector-java.jar http://central.maven.org/maven2/mysql/mysql-connector-java/${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}.jar
 
-# Add the executable JAR-File that runs the microservice
-ADD target/glassfish-microservice.jar .
+# Add the JAR-File that starts the microservice
+ADD target/javaee7-microservice.jar .
 
 # Add an example, which is by default shown on start up
 ADD deployment/ROOT.war .
@@ -27,7 +27,4 @@ ENV JAVA_OPS="-Xmx400m -Xms400m" \
     DB_HOST=172.17.0.1
 
 # Define the command for start up
-CMD java ${JAVA_OPS} -jar glassfish-microservice.jar ${JAVA_ARGS}
-
-# The external port
-EXPOSE ${WEB_PORT}
+CMD java -cp javaee7-microservice.jar:lib/*:${JAVA_HOME}/lib/tools.jar ${JAVA_OPS} com.luiswolff.microservices.Launcher ${JAVA_ARGS}

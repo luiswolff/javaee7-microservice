@@ -25,12 +25,14 @@ import com.luiswolff.microservices.ASFacade;
 import org.glassfish.embeddable.*;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * This class should encapsulate the GlassFish-API
  *
  * Created by luis- on 11.03.2017.
  */
+@SuppressWarnings("unused")
 public class GlassFishFacade implements ASFacade{
 
     private final GlassFish glassFish;
@@ -94,7 +96,7 @@ public class GlassFishFacade implements ASFacade{
         final String database   = System.getProperty("javaee7.ms.DB_NAME"      , "test");
         final String host       = System.getProperty("javaee7.ms.DB_HOST"      , "localhost");
         final String port       = System.getProperty("javaee7.ms.DB_PORT"      , "3306");
-        final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "RegisterConnectionPool");
+        final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "MySQLPool");
         final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__default");
 
         final String properties
@@ -106,6 +108,12 @@ public class GlassFishFacade implements ASFacade{
 
         try {
             CommandRunner commandRunner = glassFish.getCommandRunner();
+
+            // If a connection pool with the same name as the new one already exists, it will be deleted.
+            if (Arrays.asList("DerbyPool", "__TimerPool").contains(poolName)){
+                //FIXME: Would this be really a good idea
+                commandRunner.run("delete-jdbc-connection-pool", "--cascade=true", poolName);
+            }
             CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool",
                     "--datasourceclassname", className,
                     "--restype", type,
@@ -113,12 +121,16 @@ public class GlassFishFacade implements ASFacade{
                     poolName);
             checkResult(commandResult);
 
+            // If a datasource with the same name as the new one already exists, it will be deleted.
+            if (Arrays.asList("jdbc/__default", "jdbc/__TimerPool").contains(jndi)){
+                commandRunner.run("delete-jdbc-resource", jndi);
+            }
             commandResult = commandRunner.run("create-jdbc-resource",
                     "--connectionpoolid", poolName,
                     jndi);
             checkResult(commandResult);
         } catch (GlassFishException e){
-            throw new ASException("Could not configurate GlassFish-Server", e);
+            throw new ASException("Could not configure GlassFish-Server", e);
         }
     }
 

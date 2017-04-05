@@ -25,7 +25,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.luiswolff.microservices</groupId>
-    <artifactId>Java-EE7-Microservice</artifactId>
+    <artifactId>javaee7-microservice</artifactId>
     <version>1.0.0.BETA</version>
 
     <packaging>jar</packaging>
@@ -33,6 +33,7 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
@@ -50,21 +51,6 @@
 
     <build>
         <finalName>${project.artifactId}</finalName>
-        <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.luiswolff.microservices.Launcher</mainClass>
-                        </manifest>
-                        <manifestEntries>
-                            <Class-Path>lib/glassfish-embedded.jar lib/mysql-connector-java.jar</Class-Path>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
     </build>
 
 </project>
