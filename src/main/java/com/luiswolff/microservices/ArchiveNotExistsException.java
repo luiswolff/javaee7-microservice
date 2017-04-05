@@ -21,29 +21,9 @@
 package com.luiswolff.microservices;
 
 /**
- * Exception indicating that a undefined stage was reached with in the application server
+ * Exception indicating that the provided archive could not be found
  *
- * Created by luis- on 11.03.2017.
+ * Created by luis- on 05.04.2017.
  */
-public class ASException extends Exception {
-
-    final int exit;
-
-    public ASException(String message) {
-        this(1, message);
-    }
-
-    public ASException(String message, Throwable cause) {
-        this(1, message, cause);
-    }
-
-    public ASException(int exit, String message) {
-        super(message);
-        this.exit = exit;
-    }
-
-    public ASException(int exit, String message, Throwable cause) {
-        super(message, cause);
-        this.exit = exit;
-    }
+class ArchiveNotExistsException extends Exception{
 }

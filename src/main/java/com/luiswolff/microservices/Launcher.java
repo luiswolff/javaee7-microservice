@@ -20,8 +20,8 @@
 
 package com.luiswolff.microservices;
 
-import java.io.File;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,6 +42,8 @@ public class Launcher {
 
     private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
 
+    private static ResourceManager rm = new ResourceManager();
+
     private static ASFacade facade;
 
     /**
@@ -57,6 +59,8 @@ public class Launcher {
      */
     public static void main(String[] args) {
 
+        printLogo();
+
         LOGGER.info("Prepare starting of GlassFish-Server");
 
         if (args.length == 0) {
@@ -64,25 +68,14 @@ public class Launcher {
             System.exit(1);
         }
 
-        File war = new File(args[0]);
-        if (!war.exists()) {
+        try {
+            rm.findArchive(args[0]);
+        } catch (ArchiveNotExistsException e) {
             LOGGER.warning("The file submitted dose not exists. EXITING!");
             System.exit(1);
         }
         String[] deploymentArgs = new String[args.length - 1];
         System.arraycopy(args, 1, deploymentArgs, 0, args.length - 1);
-
-        readEnv("WEB_LISTENER"  , "javaee7.ms.WEB_LISTENER");
-        readEnv("WEB_PORT"      , "javaee7.ms.WEB_PORT");
-        readEnv("DB_CLASS"      , "javaee7.ms.DB_CLASS");
-        readEnv("DB_TYPE"       , "javaee7.ms.DB_TYPE");
-        readEnv("DB_USER"       , "javaee7.ms.DB_USER");
-        readEnv("DB_PASSWD"     , "javaee7.ms.DB_PASSWD");
-        readEnv("DB_NAME"       , "javaee7.ms.DB_NAME");
-        readEnv("DB_HOST"       , "javaee7.ms.DB_HOST");
-        readEnv("DB_PORT"       , "javaee7.ms.DB_PORT");
-        readEnv("DB_POOL"       , "javaee7.ms.DB_POOL");
-        readEnv("DB_JNDI"       , "javaee7.ms.DB_JNDI");
 
         LOGGER.info("Starting GlassFish-Server");
 
@@ -90,7 +83,7 @@ public class Launcher {
             facade = ASFacade.getInstance();
             facade.start();
             facade.configureJDBCResource();
-            facade.deployApplication(war, deploymentArgs);
+            facade.deployApplication(rm.getArchive(), deploymentArgs);
         } catch (ASException e) {
             LOGGER.log(Level.SEVERE, "Error on start up of application server", e);
             System.exit(e.exit);
@@ -121,6 +114,51 @@ public class Launcher {
         inputListener.setName("AS-Console-Listener");
         inputListener.setDaemon(true);
         inputListener.start();
+    }
+
+    private static void printLogo() {
+        Properties systemProps = System.getProperties();
+        if (!systemProps.containsKey("batch")){
+            String notice = ResourceManager.readResource("notice");
+            System.out.println(notice);
+            System.out.println();
+            System.out.println();
+        }
+
+        boolean abort = false;
+        boolean printHeader = true;
+
+        if (systemProps.containsKey("show.c")){
+            printGPLHeader();
+            printHeader = false;
+            String conditions = ResourceManager.readResource("conditions");
+            System.out.println(conditions);
+            System.out.println();
+            System.out.println();
+            abort = true;
+        }
+
+        if (systemProps.containsKey("show.w")){
+            if (printHeader){
+                printGPLHeader();
+            }
+            String warranty = ResourceManager.readResource("warranty");
+            System.out.println(warranty);
+            System.out.println();
+            System.out.println();
+            abort = true;
+        }
+
+        if (abort){
+            System.exit(0);
+        }
+
+    }
+
+    private static void printGPLHeader() {
+        String gpl = ResourceManager.readResource("gpl");
+        System.out.println(gpl);
+        System.out.println();
     }
 
     private static void shutdown(){
@@ -157,5 +195,19 @@ public class Launcher {
         if (value != null){
             System.setProperty(key, value);
         }
+    }
+
+    static {
+        readEnv("WEB_LISTENER"  , "javaee7.ms.WEB_LISTENER");
+        readEnv("WEB_PORT"      , "javaee7.ms.WEB_PORT");
+        readEnv("DB_CLASS"      , "javaee7.ms.DB_CLASS");
+        readEnv("DB_TYPE"       , "javaee7.ms.DB_TYPE");
+        readEnv("DB_USER"       , "javaee7.ms.DB_USER");
+        readEnv("DB_PASSWD"     , "javaee7.ms.DB_PASSWD");
+        readEnv("DB_NAME"       , "javaee7.ms.DB_NAME");
+        readEnv("DB_HOST"       , "javaee7.ms.DB_HOST");
+        readEnv("DB_PORT"       , "javaee7.ms.DB_PORT");
+        readEnv("DB_POOL"       , "javaee7.ms.DB_POOL");
+        readEnv("DB_JNDI"       , "javaee7.ms.DB_JNDI");
     }
 }
