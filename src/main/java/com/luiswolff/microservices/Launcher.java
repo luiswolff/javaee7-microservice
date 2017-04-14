@@ -214,6 +214,8 @@ public class Launcher {
         readEnv("DB_NAME"       , "javaee7.ms.DB_NAME");
         readEnv("DB_HOST"       , "javaee7.ms.DB_HOST");
         readEnv("DB_PORT"       , "javaee7.ms.DB_PORT");
+        readEnv("DB_URL"        , "javaee7.ms.DB_URL");
+        readEnv("DB_ATTR"       , "javaee7.ms.DB_ATTRIBUTES");
         readEnv("DB_POOL"       , "javaee7.ms.DB_POOL");
         readEnv("DB_JNDI"       , "javaee7.ms.DB_JNDI");
     }

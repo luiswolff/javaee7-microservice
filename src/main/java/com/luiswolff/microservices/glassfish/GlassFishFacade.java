@@ -96,15 +96,19 @@ public class GlassFishFacade implements ASFacade{
         final String database   = System.getProperty("javaee7.ms.DB_NAME"      , "test");
         final String host       = System.getProperty("javaee7.ms.DB_HOST"      , "localhost");
         final String port       = System.getProperty("javaee7.ms.DB_PORT"      , "3306");
+        final String url        = System.getProperty("javaee7.ms.DB_URL"       , "");
+        final String attributes = System.getProperty("javaee7.ms.DB_ATTRIBUTES", "");
         final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "MySQLPool");
         final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__default");
 
-        final String properties
-                = "DatabaseName="   + database  + ":"
-                + "Password="       + password  + ":"
-                + "User="           + user      + ":"
-                + "ServerName="     + host      + ":"
-                + "Port="           + port      + ":";
+        final String properties =
+                (!database.isEmpty()    ? "databaseName="           + database      + ":" : "") +
+                (!password.isEmpty()    ? "password="               + password      + ":" : "") +
+                (!user.isEmpty()        ? "user="                   + user          + ":" : "") +
+                (!host.isEmpty()        ? "serverName="             + host          + ":" : "") +
+                (!port.isEmpty()        ? "port="                   + port          + ":" : "") +
+                (!url.isEmpty()         ? "url="                    + url           + ":" : "") +
+                (!attributes.isEmpty()  ? "connectionAttributes="   + escape(attributes)    + ":" : "");
 
         try {
             CommandRunner commandRunner = glassFish.getCommandRunner();
@@ -132,6 +136,12 @@ public class GlassFishFacade implements ASFacade{
         } catch (GlassFishException e){
             throw new ASException("Could not configure GlassFish-Server", e);
         }
+    }
+
+    private String escape(String attributes) {
+        return "\\;" + attributes
+                .replace(";", "\\;")
+                .replace("=", "\\=");
     }
 
     private void checkResult(CommandResult commandResult) throws ASException {
