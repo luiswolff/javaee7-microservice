@@ -20,10 +20,8 @@
 
 package com.luiswolff.microservices;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.Properties;
 
 /**
  * This class provides access to an Java EE archive and has utility methods for reading resources.
@@ -65,5 +63,24 @@ class ResourceManager {
             throw new RuntimeException(ioe);
         }
         return out.toString();
+    }
+
+    static Properties loadProperties(String file, boolean resource) {
+        Properties properties = new Properties();
+        try {
+            InputStream in;
+            if (!resource){
+                in = new FileInputStream(file);
+            } else {
+                in = ResourceManager.class.getResourceAsStream(file);
+                if (in == null){
+                    throw new IllegalStateException();
+                }
+            }
+            properties.load(in);
+        } catch (IOException e) {
+            properties.clear();
+        }
+        return properties;
     }
 }

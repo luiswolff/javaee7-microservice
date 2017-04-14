@@ -196,27 +196,17 @@ public class Launcher {
         }
     }
 
-    private static void readEnv(String env, String key){
-        String value = System.getenv(env);
-        if (value != null){
-            System.setProperty(key, value);
-        }
-    }
-
     static {
-        readEnv("WEB_LISTENER"  , "javaee7.ms.WEB_LISTENER");
-        readEnv("WEB_PORT"      , "javaee7.ms.WEB_PORT");
-        readEnv("DB_CONF"       , "javaee7.ms.PROVIDE_DS");
-        readEnv("DB_CLASS"      , "javaee7.ms.DB_CLASS");
-        readEnv("DB_TYPE"       , "javaee7.ms.DB_TYPE");
-        readEnv("DB_USER"       , "javaee7.ms.DB_USER");
-        readEnv("DB_PASSWD"     , "javaee7.ms.DB_PASSWD");
-        readEnv("DB_NAME"       , "javaee7.ms.DB_NAME");
-        readEnv("DB_HOST"       , "javaee7.ms.DB_HOST");
-        readEnv("DB_PORT"       , "javaee7.ms.DB_PORT");
-        readEnv("DB_URL"        , "javaee7.ms.DB_URL");
-        readEnv("DB_ATTR"       , "javaee7.ms.DB_ATTRIBUTES");
-        readEnv("DB_POOL"       , "javaee7.ms.DB_POOL");
-        readEnv("DB_JNDI"       , "javaee7.ms.DB_JNDI");
+        Properties envMap = ResourceManager.loadProperties("envMap.properties", false);
+        if (envMap.isEmpty()){
+            envMap = ResourceManager.loadProperties("defaultEnvMap.properties", true);
+        }
+        for (String env : envMap.stringPropertyNames()) {
+            String systemKey = envMap.getProperty(env);
+            String value = System.getenv(env);
+            if (value != null) {
+                System.setProperty(systemKey, value);
+            }
+        }
     }
 }

@@ -18,8 +18,8 @@ ADD deployment/example.war .
 # Define environment variables
 ENV JAVA_OPS="-Xmx400m -Xms400m" \
     JAVA_ARGS="example.war --contextroot=/" \
-    DB_CONF=true \
     WEB_PORT=8080 \
+    DB_CONF=true \
     DB_HOST=172.17.0.1
 
 # Define the command for start up
