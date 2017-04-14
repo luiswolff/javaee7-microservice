@@ -82,7 +82,9 @@ public class Launcher {
         try {
             facade = ASFacade.getInstance();
             facade.start();
-            facade.configureJDBCResource();
+            if (isProvideDS()){
+                facade.configureJDBCResource();
+            }
             facade.deployApplication(rm.getArchive(), deploymentArgs);
         } catch (ASException e) {
             LOGGER.log(Level.SEVERE, "Error on start up of application server", e);
@@ -114,6 +116,10 @@ public class Launcher {
         inputListener.setName("AS-Console-Listener");
         inputListener.setDaemon(true);
         inputListener.start();
+    }
+
+    private static boolean isProvideDS() {
+        return Boolean.parseBoolean(System.getProperty("javaee7.ms.PROVIDE_DS", "false"));
     }
 
     private static void printLogo() {
@@ -200,6 +206,7 @@ public class Launcher {
     static {
         readEnv("WEB_LISTENER"  , "javaee7.ms.WEB_LISTENER");
         readEnv("WEB_PORT"      , "javaee7.ms.WEB_PORT");
+        readEnv("DB_CONF"       , "javaee7.ms.PROVIDE_DS");
         readEnv("DB_CLASS"      , "javaee7.ms.DB_CLASS");
         readEnv("DB_TYPE"       , "javaee7.ms.DB_TYPE");
         readEnv("DB_USER"       , "javaee7.ms.DB_USER");
