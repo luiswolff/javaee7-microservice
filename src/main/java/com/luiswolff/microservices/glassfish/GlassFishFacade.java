@@ -20,7 +20,6 @@
 
 package com.luiswolff.microservices.glassfish;
 
-import com.luiswolff.microservices.ASException;
 import com.luiswolff.microservices.ASFacade;
 import org.glassfish.embeddable.*;
 
@@ -37,7 +36,7 @@ public class GlassFishFacade implements ASFacade{
 
     private final GlassFish glassFish;
 
-    public GlassFishFacade() throws ASException {
+    public GlassFishFacade() throws GFException {
         String listener = System.getProperty("javaee7.ms.WEB_LISTENER", "http")
                 .equalsIgnoreCase("https") ? "https-listener" : "http-listener";
         String port     = System.getProperty("javaee7.ms.WEB_PORT"    , "8080");
@@ -48,11 +47,11 @@ public class GlassFishFacade implements ASFacade{
         try {
             glassFish = GlassFishRuntime.bootstrap().newGlassFish(glassFishProperties);
         } catch (GlassFishException e){
-            throw new ASException("Could not instantiate GlassFish-Server", e);
+            throw GFException.createInstance(e, "glassfish.exception.no_instance");
         }
     }
 
-    public void start() throws ASException {
+    public void start() throws GFException {
         try {
             GlassFish.Status status = glassFish.getStatus();
             switch (status){
@@ -62,15 +61,15 @@ public class GlassFishFacade implements ASFacade{
                     glassFish.start();
                     break;
                 default:
-                    throw new ASException("GlassFish-Server has invalid state for starting: " + status);
+                    throw GFException.createInstance("glassfish.exception.start_invalid_status", status);
             }
 
         } catch (GlassFishException e){
-            throw new ASException("Could not start up GlassFish-Server", e);
+            throw GFException.createInstance(e, "glassfish.exception.start_up");
         }
     }
 
-    public void stop(boolean dispose) throws ASException {
+    public void stop(boolean dispose) throws GFException {
         try {
             GlassFish.Status status = glassFish.getStatus();
             switch (status){
@@ -81,14 +80,14 @@ public class GlassFishFacade implements ASFacade{
                     }
                     break;
                 default:
-                    throw new ASException(2, "GlassFish-Server has invalid state for stopping: " + status);
+                    throw GFException.createInstance("glassfish.exception.stop_invalid_status", status);
             }
         } catch(GlassFishException e){
-            throw new ASException(2, "Could not shutdown GlassFish-Server", e);
+            throw GFException.createInstance(e, "glassfish.exception.shutdown");
         }
     }
 
-    public void configureJDBCResource() throws ASException {
+    public void configureJDBCResource() throws GFException {
         final String className  = System.getProperty("javaee7.ms.DB_CLASS"     , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
         final String type       = System.getProperty("javaee7.ms.DB_TYPE"      , "javax.sql.DataSource");
         final String user       = System.getProperty("javaee7.ms.DB_USER"      , "sa");
@@ -115,7 +114,7 @@ public class GlassFishFacade implements ASFacade{
 
             // If a connection pool with the same name as the new one already exists, it will be deleted.
             if (Arrays.asList("DerbyPool", "__TimerPool").contains(poolName)){
-                //FIXME: Would this be really a good idea
+                //FIXME: Is this really a good idea?
                 commandRunner.run("delete-jdbc-connection-pool", "--cascade=true", poolName);
             }
             CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool",
@@ -134,7 +133,7 @@ public class GlassFishFacade implements ASFacade{
                     jndi);
             checkResult(commandResult);
         } catch (GlassFishException e){
-            throw new ASException("Could not configure GlassFish-Server", e);
+            throw GFException.createInstance(e, "glassfish.exception.config");
         }
     }
 
@@ -144,21 +143,21 @@ public class GlassFishFacade implements ASFacade{
                 .replace("=", "\\=");
     }
 
-    private void checkResult(CommandResult commandResult) throws ASException {
+    private void checkResult(CommandResult commandResult) throws GFException {
         if (commandResult.getExitStatus().equals(CommandResult.ExitStatus.FAILURE)){
-            throw new ASException("Could not execute command",commandResult.getFailureCause());
+            throw GFException.createInstance(commandResult.getFailureCause(), "glassfish.exception.command");
         }
     }
 
-    public void deployApplication(File war, String[] args) throws ASException {
+    public void deployApplication(File war, String[] args) throws GFException {
         try {
             Deployer deployer = glassFish.getDeployer();
-            deployer.deploy(war, args);
-            if (deployer.getDeployedApplications().size() == 0) {
-                throw new ASException("Deploying of application failed", null);
+            String result = deployer.deploy(war, args);
+            if (result == null) {
+                throw GFException.createInstance("glassfish.exception.deploy_failed");
             }
         } catch (GlassFishException e){
-            throw new ASException("Could not deploy artifact " + war.getAbsolutePath(), e);
+            throw GFException.createInstance(e, "glassfish.exception.deploy", war.getAbsolutePath());
         }
     }
 

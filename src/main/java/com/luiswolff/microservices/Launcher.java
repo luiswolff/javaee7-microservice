@@ -20,6 +20,8 @@
 
 package com.luiswolff.microservices;
 
+import com.luiswolff.microservices.utils.Constants;
+
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Scanner;
@@ -40,7 +42,7 @@ import java.util.logging.Logger;
  */
 public class Launcher {
 
-    private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Launcher.class.getName(), Constants.LOGGING_BUNDLE);
 
     private static ResourceManager rm = new ResourceManager();
 
@@ -58,40 +60,36 @@ public class Launcher {
      * @param args The deployment artifact as first value followed by optional deployment parameters
      */
     public static void main(String[] args) {
-
+        loadEnv();
         printLogo();
 
-        LOGGER.info("Prepare starting of GlassFish-Server");
+        LOGGER.info("server.prepare");
 
         if (args.length == 0) {
-            LOGGER.warning("There was no WAR-File to deploy submitted. EXITING!");
+            LOGGER.warning("server.deployment.undefined");
             System.exit(1);
         }
 
         try {
             rm.findArchive(args[0]);
         } catch (ArchiveNotExistsException e) {
-            LOGGER.warning("The file submitted dose not exists. EXITING!");
+            LOGGER.warning("server.deployment.not_found");
             System.exit(1);
         }
         String[] deploymentArgs = new String[args.length - 1];
         System.arraycopy(args, 1, deploymentArgs, 0, args.length - 1);
 
-        LOGGER.info("Starting GlassFish-Server");
+        LOGGER.info("server.starting");
 
         try {
             facade = ASFacade.getInstance();
-            facade.start();
-            if (isProvideDS()){
-                facade.configureJDBCResource();
-            }
-            facade.deployApplication(rm.getArchive(), deploymentArgs);
+            facade.bootstrap(rm.getArchive(), deploymentArgs);
         } catch (ASException e) {
-            LOGGER.log(Level.SEVERE, "Error on start up of application server", e);
+            LOGGER.log(Level.SEVERE, "server.starting.exception", e);
             System.exit(e.exit);
         }
 
-        LOGGER.info("GlassFish-Server and deployment artifact started successfully. Type \"exit\" or \"^C\" to halt this process");
+        LOGGER.log(Level.INFO, "server.running", Constants.EXIT_COMMAND);
         final Thread shutdownHook = new Thread(Launcher::shutdown);
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
@@ -108,7 +106,7 @@ public class Launcher {
                 if (input.equalsIgnoreCase("restart")){
                     restart();
                 }
-            } while (!input.equalsIgnoreCase("exit"));
+            } while (!input.equalsIgnoreCase(Constants.EXIT_COMMAND));
 
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
             shutdown(false);
@@ -116,10 +114,6 @@ public class Launcher {
         inputListener.setName("AS-Console-Listener");
         inputListener.setDaemon(true);
         inputListener.start();
-    }
-
-    private static boolean isProvideDS() {
-        return Boolean.parseBoolean(System.getProperty("javaee7.ms.PROVIDE_DS", "false"));
     }
 
     private static void printLogo() {
@@ -172,31 +166,32 @@ public class Launcher {
     }
 
     private static void shutdown(boolean shutdownInProgress){
-        LOGGER.info("Received stop command");
+        LOGGER.info("server.stopping");
         try {
             facade.stop(true);
+            LOGGER.info("server.stopped");
             if (!shutdownInProgress){
                 System.exit(0);
             }
         } catch (ASException e) {
-            LOGGER.log(Level.SEVERE, "Could not stop application server correctly", e);
+            LOGGER.log(Level.SEVERE, "server.stopping.exception", e);
             Runtime.getRuntime().halt(e.exit);
         }
     }
 
     private static void restart(){
         //TODO: This method dose not restart the server. Why?
-        LOGGER.info("Restart application server");
+        LOGGER.info("server.restarting");
         try {
             facade.stop(false);
             facade.start();
         } catch (ASException e){
-            LOGGER.log(Level.SEVERE, "Exception on restarting server", e);
+            LOGGER.log(Level.SEVERE, "server.restarting.exception", e);
             Runtime.getRuntime().halt(1);
         }
     }
 
-    static {
+    private static void loadEnv(){
         Properties envMap = ResourceManager.loadProperties("envMap.properties", false);
         if (envMap.isEmpty()){
             envMap = ResourceManager.loadProperties("defaultEnvMap.properties", true);

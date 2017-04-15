@@ -37,6 +37,15 @@ public interface ASFacade {
 
     void deployApplication(File war, String[] args) throws ASException;
 
+    default void bootstrap(File deployment, String[] args) throws ASException{
+        start();
+        String tmp = System.getProperty("javaee7.ms.PROVIDE_DS", "false");
+        if (Boolean.parseBoolean(tmp)){
+            configureJDBCResource();
+        }
+        deployApplication(deployment, args);
+    }
+
     static ASFacade getInstance(){
         String impl = System.getProperty("javaee7.ms.AS", "com.luiswolff.microservices.glassfish.GlassFishFacade");
 
