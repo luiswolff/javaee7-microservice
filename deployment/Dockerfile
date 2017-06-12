@@ -4,16 +4,16 @@ FROM glassfish/openjdk
 MAINTAINER Luis-Manuel Wolff Heredia <luis-manuel.wolff@outlook.com>
 
 # Add glassfish dependency
-ADD target/lib/glassfish-embedded-web.jar lib/glassfish-embedded-web.jar
+ADD lib/glassfish-embedded-web.jar lib/glassfish-embedded-web.jar
 
 # Add mysql dependency
-ADD target/lib/mysql-connector-java.jar lib/mysql-connector-java.jar
+ADD lib/mysql-connector-java.jar lib/mysql-connector-java.jar
 
 # Add the JAR-File that starts the microservice
-ADD target/javaee7-microservice.jar .
+ADD javaee7-microservice.jar .
 
 # Add an example, which is by default shown on start up
-ADD deployment/example.war .
+ADD example.war .
 
 # Define environment variables
 ENV JAVA_OPS="-Xmx400m -Xms400m" \
