@@ -24,7 +24,7 @@ import com.luiswolff.microservices.ASFacade;
 import org.glassfish.embeddable.*;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.Scanner;
 
 /**
  * This class should encapsulate the GlassFish-API
@@ -90,14 +90,14 @@ public class GlassFishFacade implements ASFacade{
     public void configureJDBCResource() throws GFException {
         final String className  = System.getProperty("javaee7.ms.DB_CLASS"     , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
         final String type       = System.getProperty("javaee7.ms.DB_TYPE"      , "javax.sql.DataSource");
-        final String user       = System.getProperty("javaee7.ms.DB_USER"      , "sa");
-        final String password   = System.getProperty("javaee7.ms.DB_PASSWD"    , "sa");
+        final String user       = System.getProperty("javaee7.ms.DB_USER"      , "");
+        final String password   = System.getProperty("javaee7.ms.DB_PASSWD"    , "");
         final String database   = System.getProperty("javaee7.ms.DB_NAME"      , "test");
         final String host       = System.getProperty("javaee7.ms.DB_HOST"      , "localhost");
         final String port       = System.getProperty("javaee7.ms.DB_PORT"      , "3306");
         final String url        = System.getProperty("javaee7.ms.DB_URL"       , "");
-        final String attributes = System.getProperty("javaee7.ms.DB_ATTRIBUTES", "");
-        final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "MySQLPool");
+        final String attributes = System.getProperty("javaee7.ms.DB_ATTR"      , "");
+        final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "__defaultPool");
         final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__default");
 
         final String properties =
@@ -113,8 +113,7 @@ public class GlassFishFacade implements ASFacade{
             CommandRunner commandRunner = glassFish.getCommandRunner();
 
             // If a connection pool with the same name as the new one already exists, it will be deleted.
-            if (Arrays.asList("DerbyPool", "__TimerPool").contains(poolName)){
-                //FIXME: Is this really a good idea?
+            if (resultContains(commandRunner.run("list-jdbc-connection-pools"), poolName)){
                 commandRunner.run("delete-jdbc-connection-pool", "--cascade=true", poolName);
             }
             CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool",
@@ -125,7 +124,7 @@ public class GlassFishFacade implements ASFacade{
             checkResult(commandResult);
 
             // If a datasource with the same name as the new one already exists, it will be deleted.
-            if (Arrays.asList("jdbc/__default", "jdbc/__TimerPool").contains(jndi)){
+            if (resultContains(commandRunner.run("list-jdbc-resources"), jndi)) {
                 commandRunner.run("delete-jdbc-resource", jndi);
             }
             commandResult = commandRunner.run("create-jdbc-resource",
@@ -135,6 +134,18 @@ public class GlassFishFacade implements ASFacade{
         } catch (GlassFishException e){
             throw GFException.createInstance(e, "glassfish.exception.config");
         }
+    }
+
+    private boolean resultContains(CommandResult result, String query) {
+        Scanner scanner = new Scanner(result.getOutput());
+        scanner.skip(".*\n"); //skip first line because it only contains human information
+        while(scanner.hasNextLine()){
+            String line = scanner.nextLine().trim();
+            if (line.equals(query)){
+                return true;
+            }
+        }
+        return false;
     }
 
     private String escape(String attributes) {
@@ -160,5 +171,4 @@ public class GlassFishFacade implements ASFacade{
             throw GFException.createInstance(e, "glassfish.exception.deploy", war.getAbsolutePath());
         }
     }
-
 }
