@@ -90,24 +90,8 @@ public class GlassFishFacade implements ASFacade{
     public void configureJDBCResource() throws GFException {
         final String className  = System.getProperty("javaee7.ms.DB_CLASS"     , "com.mysql.jdbc.jdbc2.optional.MysqlDataSource");
         final String type       = System.getProperty("javaee7.ms.DB_TYPE"      , "javax.sql.DataSource");
-        final String url        = System.getProperty("javaee7.ms.DB_URL"       , "");
-        final String user       = System.getProperty("javaee7.ms.DB_USER"      , "");
-        final String password   = System.getProperty("javaee7.ms.DB_PASSWD"    , "");
-        final String database   = System.getProperty("javaee7.ms.DB_NAME"      , url.isEmpty() ? "test" : "");
-        final String host       = System.getProperty("javaee7.ms.DB_HOST"      , url.isEmpty() ? "localhost" : "");
-        final String port       = System.getProperty("javaee7.ms.DB_PORT"      , url.isEmpty() ? "3306" : "");
-        final String attributes = System.getProperty("javaee7.ms.DB_ATTR"      , "");
         final String poolName   = System.getProperty("javaee7.ms.DB_POOL"      , "__defaultPool");
         final String jndi       = System.getProperty("javaee7.ms.DB_JNDI"      , "jdbc/__default");
-
-        final String properties =
-                (!database.isEmpty()    ? "databaseName="           + database      + ":" : "") +
-                (!password.isEmpty()    ? "password="               + password      + ":" : "") +
-                (!user.isEmpty()        ? "user="                   + user          + ":" : "") +
-                (!host.isEmpty()        ? "serverName="             + host          + ":" : "") +
-                (!port.isEmpty()        ? "port="                   + port          + ":" : "") +
-                (!url.isEmpty()         ? "url="                    + escape(url)   + ":" : "") +
-                (!attributes.isEmpty()  ? "connectionAttributes="   + escape(attributes)  : "");
 
         try {
             CommandRunner commandRunner = glassFish.getCommandRunner();
@@ -119,7 +103,7 @@ public class GlassFishFacade implements ASFacade{
             CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool",
                     "--datasourceclassname", className,
                     "--restype", type,
-                    "--property", properties,
+                    "--property", readProperties(),
                     poolName);
             checkResult(commandResult);
 
@@ -146,6 +130,21 @@ public class GlassFishFacade implements ASFacade{
             }
         }
         return false;
+    }
+
+    private String readProperties(){
+        final String protocol   = System.getProperty("javaee7.ms.DB_PROTOCOL"  , "jdbc:mysql");
+        final String user       = System.getProperty("javaee7.ms.DB_USER"      , "");
+        final String password   = System.getProperty("javaee7.ms.DB_PASSWD"    , "");
+        final String database   = System.getProperty("javaee7.ms.DB_NAME"      , "test");
+        final String host       = System.getProperty("javaee7.ms.DB_HOST"      , "localhost");
+        final String port       = System.getProperty("javaee7.ms.DB_PORT"      , "3306");
+        final String attributes = System.getProperty("javaee7.ms.DB_ATTR"      , "");
+        final String url = protocol + "://" + host + ":" + port + "/" + database + (!attributes.isEmpty() ? "?" + attributes : "");
+
+        return "url=" + escape(url) +
+                (!password.isEmpty()    ? ":password="               + password : "") +
+                (!user.isEmpty()        ? ":user="                   + user     : "");
     }
 
     private String escape(String attributes) {
