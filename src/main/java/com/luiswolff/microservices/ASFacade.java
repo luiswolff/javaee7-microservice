@@ -39,8 +39,7 @@ public interface ASFacade {
 
     default void bootstrap(File deployment, String[] args) throws ASException{
         start();
-        String tmp = System.getProperty("javaee7.ms.PROVIDE_DS", "false");
-        if (Boolean.parseBoolean(tmp)){
+        if (Boolean.getBoolean("javaee7.ms.PROVIDE_DS")){
             configureJDBCResource();
         }
         deployApplication(deployment, args);
