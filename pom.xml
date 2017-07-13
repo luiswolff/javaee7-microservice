@@ -79,6 +79,25 @@
                     <outputDirectory>deployment</outputDirectory>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}/deployment</directory>
+                            <includes>
+                                <include>lib/</include>
+                                <include>**/*.jar</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*.war</exclude>
+                                <exclude>**/Dockerfile</exclude>
+                            </excludes>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
