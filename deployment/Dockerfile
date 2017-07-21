@@ -22,5 +22,8 @@ ENV JAVA_OPS="-Xmx400m -Xms400m" \
     DB_CONF=true \
     DB_HOST=172.17.0.1
 
+# Expors the port to listen on
+EXPOSE ${WEB_PORT}
+
 # Define the command for start up
 CMD java -cp javaee7-microservice.jar:lib/*:${JAVA_HOME}/lib/tools.jar ${JAVA_OPS} com.luiswolff.microservices.Launcher ${JAVA_ARGS}
